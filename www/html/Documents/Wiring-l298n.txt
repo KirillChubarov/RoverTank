@@ -1,0 +1,8 @@
+Physical | WiringPi    | l298n
+---------------------------
+  11     |gpio0        | INA
+  12     |gpio2        | INB
+  15     |gpio3        | INC
+  16     |gpio4        | IND
+  32     |gpio26(pwm0) | ENA
+  33     |gpio23(pwm1) | ENB

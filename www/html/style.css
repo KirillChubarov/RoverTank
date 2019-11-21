@@ -1,0 +1,92 @@
+html, body {
+	margin: 10px;
+	overflow: hidden;
+	background-color: #202020;
+    }
+
+.btn-group .movebutton_step {
+    background-color: #4CAF50;
+    border: 1px solid green;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    float: left;
+    }
+
+.btn-group .movebutton_step:not(:last-child) {
+    border-right: none;
+    }
+
+.btn-group .movebutton_step:hover {
+    background-color: #3e8e41;
+    }
+    
+.btn-group .movebutton {
+    background-color: #008CBA; /* blue */
+    border: 1px solid #064d64;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    float: left;
+    }
+
+.btn-group .movebutton_step:not(:last-child) {
+    border-right: none; 
+}
+    
+.btn-group .movebutton:hover {
+        background-color: #076786;
+    }
+
+/* gamepad style start */
+.buttons, .axes {
+    padding: 1em;
+  }
+  /*meter*/.axis {
+    min-width: 200px;
+    margin: 1em;
+  }
+  .button {
+    padding: 1em;
+    border-radius: 20px;
+    border: 1px solid black;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAAxJREFUCNdjYPjPAAACAgEAqiqeJwAAAABJRU5ErkJggg==);
+    background-size: 0% 0%;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+  }
+  .pressed {
+    border: 1px solid red;
+  }
+
+  #joy_container {
+      height: 400px;
+      width: 600px;
+      /*background-color: LightGray;*/
+  }
+
+  /* */
+  * { box-sizing: border-box;}
+      /* Create two equal columns that floats next to each other */
+  .column {
+  float: left;
+  width: 50%;
+  padding: 10px;
+   /* Should be removed. Only for demonstration */
+  }
+
+  /* Clear floats after the columns */
+  .row:after {
+      content: "";
+      display: table;
+      clear: both;
+  }
+  /* gamepad style end */

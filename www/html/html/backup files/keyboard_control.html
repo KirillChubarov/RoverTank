@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Марсоход</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+ <script>
+ var lastDownTarget, canvas;
+ window.onload = function() {
+    canvas = document.getElementById('canvas');
+
+	// document.addEventListener('mousedown', function(e) {
+        //	lastDownTarget = e.target;
+        // 	alert('mousedown');
+    	// }, false);
+
+	document.addEventListener('keydown', function(e) {
+        
+	if(lastDownTarget == canvas) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                document.getElementById("txtResult").innerHTML = this.responseText;
+                }
+            };
+            
+            xmlhttp.open("GET", "/php/marsohod1.php?q=" + e.keyCode, true);
+            xmlhttp.send();
+            //alert(e.keyCode);
+        }
+    }, false);
+ }
+</script>
+
+<!--<div id="canva2s">
+<p> keys: <span id="txtResult"></span></p>-->
+<div><img src="http://buran.club:45001/stream/video.mjpeg" alt="image"></div>
+
+<!--<div>
+<button id="forward_step" class="movebutton_step" type="button"> Шаг Вперед </button>
+<button id="backward_step" class="movebutton_step" type="button"> Шаг Назад </button>
+<button id="left_step" class="movebutton_step" type="button"> Шаг Влево </button>
+<button id="right_step" class="movebutton_step" type="button"> Шаг Вправо </button>
+</div>
+
+<div style="padding-top:10px;">
+<button id="forward" class="movebutton" type="button"> Вперед </button>
+<button id="backward" class="movebutton" type="button"> Назад </button>
+<button id="left" class="movebutton" type="button"> Влево </button>
+<button id="right" class="movebutton" type="button"> Вправо </button>
+<button id="stop" class="movebutton" type="button"> Стоп </button>
+</div> -->
+
+</div>
+</body>
+</html>
