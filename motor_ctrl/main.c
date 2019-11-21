@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
-#include "../libs/wiringPi/wiringPi.h"
+#include "/root/wiringPi/wiringPi/wiringPi.h"
 
 //Настроечные параметры:
 
