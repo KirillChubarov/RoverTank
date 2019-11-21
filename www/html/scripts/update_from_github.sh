@@ -6,6 +6,8 @@ git pull
 cd /root/git/RoverTank/motor_ctrl
 make
 cd /root/git/RoverTank
-rsync -av --delete /root/git/RoverTank/www /var
+rm -r /var/www/
+mkdir /var/www/
+cp /root/git/RoverTank/www /var/www
 find /var/www/html/scripts -type f | xargs chmod 4755
 echo 'Update complete'
