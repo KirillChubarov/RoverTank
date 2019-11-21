@@ -8,6 +8,6 @@ make
 cd /root/git/RoverTank
 rm -r /var/www/
 mkdir /var/www/
-cp /root/git/RoverTank/www /var/www
+cp -avr /root/git/RoverTank/www /var/www
 find /var/www/html/scripts -type f | xargs chmod 4755
 echo 'Update complete'
