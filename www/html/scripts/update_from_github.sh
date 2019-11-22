@@ -9,5 +9,5 @@ cd /root/git/RoverTank
 rm -r /var/www/
 mkdir /var/www/
 cp -ar /root/git/RoverTank/www /var
-find /var/www/html/scripts -type f | xargs chmod 4755
+find /var/www/html/scripts -type f | xargs chmod 0755
 echo 'Update complete'
