@@ -4,13 +4,23 @@
 #include <math.h>
 #include "/root/wiringPi/wiringPi/wiringPi.h"
 
-//Настроечные параметры:
+//Setup parametrs
 
-#define right_mtr_comp 1 //Снижает скорость правого мотора для компенсации разницы в моторах (0...1)
-#define left_mtr_comp 0.5 //Снижает скорость левого мотора для компенсации разницы в моторах (0...1)
-#define dead_zone 20 //Устанавливает значение мертвой зоны стика (0...100)
-#define min_mtr_pwm 300 //Устанавливает минимальное значение ШИМ моторов (0...1023)
-#define max_mtr_pwm 1000 //Устанавливает максимальное значение ШИМ моторов (0...1023)
+#define right_dir_pin_1 0 //Set INA (direction) pin for l298n motor driver, right motor
+#define right_dir_pin_2 2 //Set INB (direction) pin for l298n motor driver, right motor
+#define left_dir_pin_1 3 //Set INC (direction) pin for l298n motor driver, left motor
+#define left_dir_pin_2 4 //Set IND (direction) pin for l298n motor driver, left motor
+#define right_speed_pin 26 //Set ENA (PWM) pin for l298n motor driver, right motor
+#define left_speed_pin 23 //Set ENA (PWM) pin for l298n motor driver, left motor
+
+#define turn_comp 1.2 //Set compensation for turns (1.0...)
+#define min_inpt_val 0.2 //Set minimum input value (0...1.0)
+#define min_turn_inpt_val 0.1 // Set minimum value for rotate mode (0...1.0)
+#define max_inpt_val 1.0 //Set maximum input value (0...1.0)
+#define right_mtr_comp 1.0 //Speed compensation for right motor(0...1.0)
+#define left_mtr_comp 1.0 //Speed compensation for left motor(0...1.0)
+#define min_mtr_pwm 250.0 //Set minimum motors PWM (0...1023.0)
+#define max_mtr_pwm 500.0 //Set minimum motors PWM (0...1023.0)
 
 double map (double value, double from_low, double from_high, double to_low, double to_high)
 {
@@ -21,135 +31,106 @@ double map (double value, double from_low, double from_high, double to_low, doub
 
 void motor_stop ()
 {
-  pwmWrite (26, 0);
-  pwmWrite (23, 0);
-  digitalWrite (0, 0);
-  digitalWrite (2, 0);
-  digitalWrite (3, 0);
-  digitalWrite (4, 0);
+  pwmWrite (right_speed_pin, 0);
+  pwmWrite (left_speed_pin, 0);
+  digitalWrite (right_dir_pin_1, 0);
+  digitalWrite (right_dir_pin_2, 0);
+  digitalWrite (left_dir_pin_1, 0);
+  digitalWrite (left_dir_pin_2, 0);
   exit (0);
 }
 
-void motor_advance (int r_dir, int l_dir, int r_speed, int l_speed, int speedup_pwm)
+void motor_advance (int right_mtr_pwm, int left_mtr_pwm)
 {
-  int r_dir2;
-  int l_dir2;
-  if (r_dir == 0) {r_dir2 = 1;} else {r_dir2 = 0;}
-  if (l_dir == 0) {l_dir2 = 1;} else {l_dir2 = 0;}
-  pwmWrite (26, 0);
-  pwmWrite (23, 0);
-  digitalWrite (0, 0);
-  digitalWrite (2, 0);
-  digitalWrite (3, 0);
-  digitalWrite (4, 0);
-  delay (10);
-  digitalWrite (0, r_dir);
-  digitalWrite (2, r_dir2);
-  digitalWrite (3, l_dir);
-  digitalWrite (4, l_dir2);
-  //pwmWrite (26, speedup_pwm);
-  //pwmWrite (23, speedup_pwm);
-  //delay (10);
-  pwmWrite (26, r_speed);
-  pwmWrite (23, l_speed);
+  int r_dir1, r_dir2, l_dir1, l_dir2;
+
+  if (right_mtr_pwm > 0) {r_dir1 = 1; r_dir2 = 0;} else {r_dir1 = 0; r_dir2 = 1;}
+  if (left_mtr_pwm > 0) {l_dir1 = 1; l_dir2 = 0;} else {l_dir1 = 0; l_dir2 = 1;}
+
+  pwmWrite (right_speed_pin, 0);
+  pwmWrite (left_speed_pin, 0);
+  digitalWrite (right_dir_pin_1, 0);
+  digitalWrite (right_dir_pin_2, 0);
+  digitalWrite (left_dir_pin_1, 0);
+  digitalWrite (left_dir_pin_2, 0);
+
+  digitalWrite (right_dir_pin_1, r_dir1);
+  digitalWrite (right_dir_pin_2, r_dir2);
+  digitalWrite (left_dir_pin_1, l_dir1);
+  digitalWrite (left_dir_pin_2, l_dir2);
+  pwmWrite (right_speed_pin, abs(right_mtr_pwm));
+  pwmWrite (left_speed_pin, abs(left_mtr_pwm));
   exit (0);
 } 
 
 int main (int argc, char *argv[])
 {
   wiringPiSetup ();
-  pinMode (0, OUTPUT);
-  pinMode (2, OUTPUT);
-  pinMode (3, OUTPUT);
-  pinMode (4, OUTPUT);
-  pinMode (26, PWM_OUTPUT);
-  pinMode (23, PWM_OUTPUT);
+  pinMode (right_dir_pin_1, OUTPUT);
+  pinMode (right_dir_pin_2, OUTPUT);
+  pinMode (left_dir_pin_1, OUTPUT);
+  pinMode (left_dir_pin_2, OUTPUT);
+  pinMode (right_speed_pin, PWM_OUTPUT);
+  pinMode (left_speed_pin, PWM_OUTPUT);
 
-  double x_axis;
-  double y_axis;
-  double right_mtr_speed;
-  double left_mtr_speed;
-  bool x_dead_zone_check;
-  bool y_dead_zone_check;
+  double x_axis, y_axis;
+  int right_mtr_speed, left_mtr_speed;
+  double y_dir = 0.0;
 
   x_axis = (atof(argv[1]));
   y_axis = (atof(argv[2]));
 
-  x_dead_zone_check = (((x_axis*100) < (dead_zone*-1)) || ((x_axis*100) > dead_zone));
-  y_dead_zone_check = (((y_axis*100) < (dead_zone*-1)) || ((y_axis*100) > dead_zone));
-
-  x_axis = (x_axis)*100;
-  y_axis = ((fabs(y_axis))*y_axis)*100;
-
-  //if (y_axis > 70) {y_axis = 100;}
-  //if (y_axis < -70) {y_axis = -100;}
-
-  if ((x_axis < -100) || (x_axis > 100)) {
+  if (fabs(x_axis) > max_inpt_val) {
     printf ("x_axis argument out of range!\n");
     exit (0);
     }
-  if ((y_axis < -100) || (y_axis > 100)) {
+  if (fabs(y_axis) > max_inpt_val) {
     printf ("y_axis argument out of range!\n");
     exit (0);
     }
-  
 
-  if ((x_dead_zone_check != true) && (y_dead_zone_check != true)) {
-    motor_stop();
-    }
-  
-  if ((x_dead_zone_check == true) && (y_dead_zone_check != true)) {
-    right_mtr_speed = (map(fabs(x_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*right_mtr_comp);
-    left_mtr_speed = (map(fabs(x_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*left_mtr_comp);
+  if (y_axis < 0) {y_dir = 1.0;}
+  if (y_axis > 0) {y_dir = -1.0;}
+
+// Stop mode
+  if ((fabs(x_axis) < min_inpt_val) && (fabs(y_axis) < min_turn_inpt_val)) {motor_stop();}
+// End of stop mode
+
+// Rotate mode
+  if ((fabs(x_axis) >= min_inpt_val) && (fabs(y_axis) < min_inpt_val)) {
+    double any_mtr_speed = (map(fabs(x_axis), min_inpt_val, max_inpt_val, min_mtr_pwm, max_mtr_pwm));
+    // Left
     if (x_axis < 0) {
-      motor_advance (1, 0, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
+      right_mtr_speed = (int)(any_mtr_speed * right_mtr_comp);
+      left_mtr_speed = (int)(any_mtr_speed * left_mtr_comp * -1.0);
     }
+    // Right
     else {
-      motor_advance (0, 1, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
+      right_mtr_speed = (int)(any_mtr_speed * right_mtr_comp * -1.0);
+      left_mtr_speed = (int)(any_mtr_speed * left_mtr_comp);
     }
+    motor_advance (right_mtr_speed, left_mtr_speed);
   }
+// End of rotate mode
 
-  if ((x_dead_zone_check != true) && (y_dead_zone_check == true)) {
-    if (y_axis < 0) {
-        right_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*right_mtr_comp;
-        left_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*left_mtr_comp;
-        motor_advance (1, 1, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
-      }
-    else {
-        right_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*right_mtr_comp;
-        left_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*left_mtr_comp;
-        motor_advance (0, 0, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
-    }
-  }
+// Free advance mode
+ 
+  double right_turn_factor = 1.0;
+  double left_turn_factor = 1.0;
+  double any_mtr_speed = (map(fabs(y_axis), min_inpt_val, max_inpt_val, min_mtr_pwm, max_mtr_pwm));
 
-  if ((x_dead_zone_check == true) && (y_dead_zone_check == true)) {
-    if (y_axis < 0) {
-      if (x_axis < 0) {
-        right_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*right_mtr_comp;
-        left_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*left_mtr_comp*(1-(sqrt(fabs(x_axis/100))));
-        motor_advance (1, 1, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
-      }
-      else {
-        right_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*right_mtr_comp*(1-(sqrt(fabs(x_axis/100))));
-        left_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*left_mtr_comp;
-        motor_advance (1, 1, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
-      }
-    }
-    else {
-      if (x_axis < 0) {
-        right_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*right_mtr_comp;
-        left_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*left_mtr_comp*(1-(sqrt(fabs(x_axis/100))));
-        motor_advance (0, 0, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
-      }
-      else {
-        right_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*right_mtr_comp*(1-(sqrt(fabs(x_axis/100))));
-        left_mtr_speed = map(fabs(y_axis), dead_zone, 100, min_mtr_pwm, max_mtr_pwm)*left_mtr_comp;
-        motor_advance (0, 0, (int)right_mtr_speed, (int)left_mtr_speed, (int)min_mtr_pwm);
-      }
-    }
-  }
+  if (x_axis > 0) {right_turn_factor = 1.0 - ((fabs(x_axis)) / turn_comp);}
+  if (x_axis < 0) {left_turn_factor = 1.0 - ((fabs(x_axis)) / turn_comp);}
 
-return 0;
+  right_mtr_speed = (int)(any_mtr_speed * right_turn_factor * right_mtr_comp * y_dir);
+  left_mtr_speed = (int)(any_mtr_speed * left_turn_factor * left_mtr_comp * y_dir);
+    
+  motor_advance (right_mtr_speed, left_mtr_speed);
+
+// End of free advance mode
+
+  printf ("Some strange happens\n");
+  return 1;
 }
 
 
