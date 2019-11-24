@@ -114,7 +114,6 @@ int main (int argc, char *argv[])
 // End of rotate mode
 
 // Free advance mode
- 
   double right_turn_factor = 1.0;
   double left_turn_factor = 1.0;
   double any_mtr_speed = (map(fabs(y_axis), min_inpt_val, max_inpt_val, min_mtr_pwm, max_mtr_pwm));
@@ -126,7 +125,6 @@ int main (int argc, char *argv[])
   left_mtr_speed = (int)(any_mtr_speed * left_turn_factor * left_mtr_comp * y_dir);
     
   motor_advance (right_mtr_speed, left_mtr_speed);
-
 // End of free advance mode
 
   printf ("Some strange happens\n");
