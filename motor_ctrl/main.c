@@ -13,14 +13,14 @@
 #define right_speed_pin 26 //Set ENA (PWM) pin for l298n motor driver, right motor
 #define left_speed_pin 23 //Set ENA (PWM) pin for l298n motor driver, left motor
 
-#define turn_comp 1.2 //Set compensation for turns (1.0...)
+#define turn_comp 0.5 //Set compensation for turns (0...1.0)
 #define min_inpt_val 0.2 //Set minimum input value (0...1.0)
 #define min_turn_inpt_val 0.1 // Set minimum value for rotate mode (0...1.0)
 #define max_inpt_val 1.0 //Set maximum input value (0...1.0)
 #define right_mtr_comp 1.0 //Speed compensation for right motor(0...1.0)
 #define left_mtr_comp 1.0 //Speed compensation for left motor(0...1.0)
 #define min_mtr_pwm 250.0 //Set minimum motors PWM (0...1023.0)
-#define max_mtr_pwm 500.0 //Set minimum motors PWM (0...1023.0)
+#define max_mtr_pwm 1000.0 //Set minimum motors PWM (0...1023.0)
 
 double map (double value, double from_low, double from_high, double to_low, double to_high)
 {
@@ -118,8 +118,14 @@ int main (int argc, char *argv[])
   double left_turn_factor = 1.0;
   double any_mtr_speed = (map(fabs(y_axis), min_inpt_val, max_inpt_val, min_mtr_pwm, max_mtr_pwm));
 
-  if (x_axis > 0) {right_turn_factor = 1.0 - ((fabs(x_axis)) / turn_comp);}
-  if (x_axis < 0) {left_turn_factor = 1.0 - ((fabs(x_axis)) / turn_comp);}
+  if (x_axis > 0) {
+    right_turn_factor = 1.0 - ((fabs(x_axis)) / turn_comp);
+    if (right_turn_factor > max_inpt_val) {right_turn_factor = max_inpt_val;}
+  }
+  if (x_axis < 0) {
+    left_turn_factor = 1.0 - ((fabs(x_axis)) / turn_comp);
+    if (left_turn_factor > max_inpt_val) {left_turn_factor = max_inpt_val;}
+  }
 
   right_mtr_speed = (int)(any_mtr_speed * right_turn_factor * right_mtr_comp * y_dir);
   left_mtr_speed = (int)(any_mtr_speed * left_turn_factor * left_mtr_comp * y_dir);
@@ -130,5 +136,3 @@ int main (int argc, char *argv[])
   printf ("Some strange happens\n");
   return 1;
 }
-
-
